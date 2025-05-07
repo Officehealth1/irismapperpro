@@ -1664,7 +1664,7 @@ document.getElementById('autoLevels')?.addEventListener('click', () => {
     // Movement controls
 // Define movement function
 function moveImage(direction) {
-    const amount = 30;
+    const amount = 10;
     if (isDualViewActive) {
         ['L', 'R'].forEach(eye => {
             const settings = imageSettings[eye];
