@@ -1601,14 +1601,18 @@ document.getElementById('autoLevels')?.addEventListener('click', () => {
 
 
     // Image transformation controls
+    const rotationStep = 1; // Define rotation step in degrees
+
+    const zoomStepMultiplier = 1.02; // Define zoom step multiplier (e.g., 1.02 for 2%)
+
     document.getElementById('rotateLeft')?.addEventListener('click', () => {
         if (isDualViewActive) {
             ['L', 'R'].forEach(eye => {
-                imageSettings[eye].rotation -= 5;
+                imageSettings[eye].rotation -= rotationStep;
                 updateCanvasTransform(eye);
             });
         } else {
-            imageSettings[currentEye].rotation -= 5;
+            imageSettings[currentEye].rotation -= rotationStep;
             updateCanvasTransform(currentEye);
         }
     });
@@ -1616,11 +1620,11 @@ document.getElementById('autoLevels')?.addEventListener('click', () => {
     document.getElementById('rotateRight')?.addEventListener('click', () => {
         if (isDualViewActive) {
             ['L', 'R'].forEach(eye => {
-                imageSettings[eye].rotation += 5;
+                imageSettings[eye].rotation += rotationStep;
                 updateCanvasTransform(eye);
             });
         } else {
-            imageSettings[currentEye].rotation += 5;
+            imageSettings[currentEye].rotation += rotationStep;
             updateCanvasTransform(currentEye);
         }
     });
@@ -1628,13 +1632,13 @@ document.getElementById('autoLevels')?.addEventListener('click', () => {
     document.getElementById('zoomIn')?.addEventListener('click', () => {
         if (isDualViewActive) {
             ['L', 'R'].forEach(eye => {
-                let newScale = (imageSettings[eye].scale || 1) * 1.1;
+                let newScale = (imageSettings[eye].scale || 1) * 1.02;
                 newScale = Math.min(newScale, 10);
                 imageSettings[eye].scale = newScale;
                 updateCanvasTransform(eye);
             });
         } else {
-            let newScale = (imageSettings[currentEye].scale || 1) * 1.1;
+            let newScale = (imageSettings[currentEye].scale || 1) * 1.02;
             newScale = Math.min(newScale, 10);
             imageSettings[currentEye].scale = newScale;
             updateCanvasTransform(currentEye);
@@ -1644,13 +1648,13 @@ document.getElementById('autoLevels')?.addEventListener('click', () => {
     document.getElementById('zoomOut')?.addEventListener('click', () => {
         if (isDualViewActive) {
             ['L', 'R'].forEach(eye => {
-                let newScale = (imageSettings[eye].scale || 1) / 1.1;
+                let newScale = (imageSettings[eye].scale || 1) / 1.02;
                 newScale = Math.max(newScale, 0.1);
                 imageSettings[eye].scale = newScale;
                 updateCanvasTransform(eye);
             });
         } else {
-            let newScale = (imageSettings[currentEye].scale || 1) / 1.1;
+            let newScale = (imageSettings[currentEye].scale || 1) / 1.02;
             newScale = Math.max(newScale, 0.1);
             imageSettings[currentEye].scale = newScale;
             updateCanvasTransform(currentEye);
@@ -1740,13 +1744,13 @@ function moveImage(direction) {
             console.log('Zoom in clicked'); // Debug log
             if (isDualViewActive) {
                 ['L', 'R'].forEach(eye => {
-                    let newScale = (imageSettings[eye].scale || 1) * 1.1;
+                    let newScale = (imageSettings[eye].scale || 1) * 1.02;
                     newScale = Math.min(newScale, 10);
                     imageSettings[eye].scale = newScale;
                     updateCanvasTransform(eye);
                 });
             } else {
-                let newScale = (imageSettings[currentEye].scale || 1) * 1.1;
+                let newScale = (imageSettings[currentEye].scale || 1) * 1.02;
                 newScale = Math.min(newScale, 10);
                 imageSettings[currentEye].scale = newScale;
                 updateCanvasTransform(currentEye);
@@ -1760,13 +1764,13 @@ function moveImage(direction) {
             console.log('Zoom out clicked'); // Debug log
             if (isDualViewActive) {
                 ['L', 'R'].forEach(eye => {
-                    let newScale = (imageSettings[eye].scale || 1) / 1.1;
+                    let newScale = (imageSettings[eye].scale || 1) / 1.02;
                     newScale = Math.max(newScale, 0.1);
                     imageSettings[eye].scale = newScale;
                     updateCanvasTransform(eye);
                 });
             } else {
-                let newScale = (imageSettings[currentEye].scale || 1) / 1.1;
+                let newScale = (imageSettings[currentEye].scale || 1) / 1.02;
                 newScale = Math.max(newScale, 0.1);
                 imageSettings[currentEye].scale = newScale;
                 updateCanvasTransform(currentEye);
@@ -1780,13 +1784,13 @@ function moveImage(direction) {
             console.log('Rotate left clicked'); // Debug log
             if (isDualViewActive) {
                 ['L', 'R'].forEach(eye => {
-                    imageSettings[eye].rotation -= 5;
+                    imageSettings[eye].rotation -= rotationStep;
                     updateCanvasTransform(eye);
                 });
             } else {
-                imageSettings[currentEye].rotation -= 5;
+                imageSettings[currentEye].rotation -= rotationStep;
                 updateCanvasTransform(currentEye);
-            }
+            };
         };
     }
 
@@ -1796,13 +1800,13 @@ function moveImage(direction) {
             console.log('Rotate right clicked'); // Debug log
             if (isDualViewActive) {
                 ['L', 'R'].forEach(eye => {
-                    imageSettings[eye].rotation += 5;
+                    imageSettings[eye].rotation += rotationStep;
                     updateCanvasTransform(eye);
                 });
             } else {
-                imageSettings[currentEye].rotation += 5;
+                imageSettings[currentEye].rotation += rotationStep;
                 updateCanvasTransform(currentEye);
-            }
+            };
         };
     }
     }
