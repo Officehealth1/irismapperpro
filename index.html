@@ -12,7 +12,16 @@
 </head>
 <body>
     <div class="app-container">
-        <img src="grids/watermark.png" alt="Logo" class="logo">
+        <div class="logo-container">
+            <img src="grids/watermark.png" alt="Logo" class="logo">
+            <span class="version-text">v5.1</span>
+        </div>
+
+        <div class="controls eye-selection-panel">
+            <button class="btn" id="leftEye">L</button>
+            <button class="btn" id="rightEye">R</button>
+            <button class="btn" id="bothEyes" disabled>L+R</button>
+        </div>
 
         <div id="single-mapper-container" class="iris-container">
             <div id="svg-container"></div>
@@ -54,13 +63,6 @@
         <button class="btn" id="moveDown">↓</button>
     </div>
 </div>
-
-
-        <div class="controls top-right">
-            <button class="btn" id="leftEye">L</button>
-            <button class="btn" id="rightEye">R</button>
-            <button class="btn" id="bothEyes">L+R</button>
-        </div>
 
         <div class="controls bottom-left">
             <input type="range" id="opacitySlider" min="0" max="1" step="0.01" value="0.7">

@@ -104,6 +104,25 @@ body, html {
     overflow-y: auto;
 }
 
+/* Eye Selection Panel Styles */
+.eye-selection-panel {
+    display: flex;
+    justify-content: center; /* Center buttons horizontally */
+    align-items: center; /* Align items vertically */
+    gap: 5px; /* Add a small gap between buttons */
+    top: 70px; /* Position below the logo */
+    left: 5%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust for centering */
+}
+
+.eye-selection-panel .btn {
+    width: auto; /* Allow buttons to size based on content or flex properties */
+    flex-grow: 0; /* Don't allow buttons to grow to fill container */
+    flex-shrink: 0; /* Don't allow buttons to shrink if container is too small */
+    padding-left: 15px; /* Add some horizontal padding */
+    padding-right: 15px; /* Add some horizontal padding */
+}
+
 /* Button Styles */
 .btn {
     padding: 6px 8px;
@@ -126,6 +145,20 @@ body, html {
 
 .btn:active {
     transform: translateY(1px);
+}
+
+/* Disabled button style */
+.eye-selection-panel .btn[disabled] {
+    background-color: #cccccc; /* Gray background */
+    color: #666666;          /* Darker gray text */
+    cursor: not-allowed;      /* Show 'not-allowed' cursor */
+    transform: none;          /* Remove any hover/active transforms */
+}
+
+/* Optional: Ensure hover effects are also disabled */
+.eye-selection-panel .btn[disabled]:hover {
+    background-color: #cccccc; /* Keep gray background on hover */
+    transform: none;
 }
 
 /* Top-Left Controls Specific */
@@ -479,17 +512,29 @@ body, html {
 }
 
 .map-option:hover {
-    background-color: #e0e0e0;
+    background-color: #f0f0f0;
 }
 
-/* Logo Styles */
-.logo {
+.logo-container {
+    display: flex;
+    align-items: flex-end; /* Align items to the bottom */
     position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 200px;
-    height: auto;
-    z-index: 15;
+    top: 10px; 
+    left: 10px; 
+    z-index: 1001;
+}
+
+.logo {
+    margin-right: 8px; /* Add some space between the logo and the version text */
+    height: 50px; 
+    width: auto;
+}
+
+.version-text {
+    font-size: 0.75em; /* Smaller font size */
+    color: #666;       /* Slightly lighter gray */
+    font-weight: 300;   /* Lighter font weight */
+    padding-bottom: 5px; /* Adjust to align with baseline of 'IRISLAB' in logo */
 }
 
 /* Responsive Design */
