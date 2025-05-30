@@ -253,6 +253,33 @@ body, html {
     margin-bottom: 10px;
 }
 
+.gallery-item-controls {
+    flex-shrink: 0; /* Prevent controls from shrinking */
+    display: flex; /* Use flex to align buttons */
+    gap: 5px; /* Add space between buttons */
+    align-items: center; /* Vertically align buttons */
+}
+
+.gallery-item-controls .btn {
+    padding: 4px 8px; /* Reduced padding */
+    font-size: 11px; /* Slightly smaller font size */
+    background-color: #4A90E2; /* Primary blue background */
+    color: white; /* White text color */
+    border: none; /* Remove border */
+    width: auto; /* Allow buttons to size based on content */
+}
+
+.gallery-item-controls .btn:hover {
+    background-color: #3A80D2; /* Darker blue on hover */
+}
+
+.gallery-item-header .image-name {
+    flex-grow: 1; /* Allow filename to take available space */
+    overflow: hidden; /* Hide overflowing text */
+    text-overflow: ellipsis; /* Show ellipsis for truncated text */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
 .add-image-btn {
     width: 30px;
     height: 30px;

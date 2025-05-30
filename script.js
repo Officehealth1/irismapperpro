@@ -19,16 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const controls = document.querySelectorAll('.controls');
     const galleryAccordion = document.getElementById('galleryAccordion');
     const addImageBtn = document.getElementById('addImageBtn');
-    const availableMaps = [
-        'Angerer_Map_DE_V1',
-        'Bourdiol_Map_FR_V1',
-        'IrisLAB_Map_EN_V2',
-        'IrisLAB_Map_FR_V2',
-        'Jaussas_Map_FR_V1',
-        'Jensen_Map_EN_V1',
-        'Jensen_Map_FR_V1',
-        'Roux_Map_FR_V1'
-    ];
+    const notesButton = document.getElementById('notes');
+    const notesModal = document.getElementById('notesModal');
+    const closeNotesModal = document.getElementById('closeNotesModal');
 
     const adjustmentSliders = {
         exposure: document.getElementById('exposureSlider'),
@@ -135,7 +128,7 @@ function findPercentilePoint(cdf, percentile) {
 }
 
     // State Management
-    let currentEye = 'L';
+    let currentEye = 'R';
     let isDualViewActive = false;
     let images = { 'L': null, 'R': null };
     let imageSettings = {
@@ -147,11 +140,13 @@ function findPercentilePoint(cdf, percentile) {
             svgContent: '',
             mapColor: '#000000',
             opacity: 0.7,
+            cachedMap: '',
         },
         'R': {
             svgContent: '',
             mapColor: '#000000',
             opacity: 0.7,
+            cachedMap: '',
         }
     };
     const resetButton = document.getElementById('resetAdjustments');
@@ -190,7 +185,8 @@ function findPercentilePoint(cdf, percentile) {
             canvas: null,
             context: null,
             image: null,
-            isAutoFitted: false
+            isAutoFitted: false,
+            notes: '' // Add a notes property
         };
     }
     
@@ -1069,37 +1065,105 @@ function updateHistogram() {
     });
 
     // Notes functionality
-    document.getElementById('notes')?.addEventListener('click', () => {
-        const notes = prompt('Enter notes:');
-        if (notes) {
-            console.log('Notes saved:', notes);
-            alert('Notes saved successfully!');
+    const notesInput = document.getElementById('notesInput');
+    const saveNoteBtn = document.getElementById('saveNoteBtn');
+    const savedNotesArea = document.getElementById('savedNotesArea');
+
+    if (notesButton) {
+        notesButton.addEventListener('click', function() {
+            if (notesModal) {
+                // Load existing notes for the current eye when opening the modal
+                if (notesInput) {
+                    notesInput.value = imageSettings[currentEye].notes;
+                }
+                // Clear any previously displayed saved notes
+                if (savedNotesArea) {
+                    savedNotesArea.innerHTML = ''; // We are only saving one note for now
+                    if (imageSettings[currentEye].notes) {
+                        const p = document.createElement('p');
+                        p.textContent = 'Saved Note: ' + imageSettings[currentEye].notes;
+                        savedNotesArea.appendChild(p);
+                    }
+                }
+                notesModal.style.display = 'block';
+            }
+        });
+    }
+
+    if (closeNotesModal) {
+        closeNotesModal.addEventListener('click', function() {
+            if (notesModal) {
+                notesModal.style.display = 'none';
+            }
+        });
+    }
+
+    // Event Listener for Save Note Button
+    if (saveNoteBtn && notesInput && savedNotesArea) {
+        saveNoteBtn.addEventListener('click', function() {
+            const noteText = notesInput.value.trim();
+            imageSettings[currentEye].notes = noteText; // Save note to the current eye's settings
+            console.log(`Note saved for ${currentEye} eye:`, noteText);
+
+            // Update the displayed saved notes area
+            savedNotesArea.innerHTML = ''; // Clear previous display
+            if (noteText) {
+                const p = document.createElement('p');
+                p.textContent = 'Saved Note: ' + noteText;
+                savedNotesArea.appendChild(p);
+            }
+            // Optionally clear the input area after saving
+            // notesInput.value = '';
+            alert('Note saved!'); // Provide user feedback
+        });
+    }
+
+    // Close modal when clicking outside of it
+    window.addEventListener('click', function(event) {
+        if (notesModal && event.target == notesModal) {
+            notesModal.style.display = 'none';
         }
+        // Keep existing logic for other modals if any
+        // if (mapModal && event.target == mapModal) {
+        //     mapModal.style.display = 'none';
+        // }
     });
 
     // SVG handling functions
     function loadSVG(svgFile, eye = currentEye) {
-        const container = isDualViewActive ? 
+        const container = isDualViewActive ?
             (eye === 'L' ? leftSvgContainer : rightSvgContainer) : svgContainer;
-        
+
         if (!container) return;
+
+        // Check if SVG content is already cached for the current map
+        if (svgSettings[eye].svgContent && svgSettings[eye].cachedMap === svgFile) {
+            container.innerHTML = svgSettings[eye].svgContent; // Use cached content
+            setupSvgElement(container, eye);
+            // Apply current color settings after loading from cache
+            changeMapColor(svgSettings[eye].mapColor, eye);
+            console.log(`Using cached SVG for ${eye} eye: ${svgFile}`); // Log which cached map is used
+            return; // Exit the function after using cache
+        }
 
         if (currentMap === 'custom') {
             container.innerHTML = customSvgContent;
             setupSvgElement(container, eye);
-            svgSettings[eye].svgContent = customSvgContent;
+            svgSettings[eye].svgContent = customSvgContent; // Cache custom SVG
+            svgSettings[eye].cachedMap = 'custom'; // Mark cached map as custom
             // Apply current color settings after loading
             changeMapColor(svgSettings[eye].mapColor, eye);
         } else {
-            fetch(`grids/${currentMap}_${eye}.svg`)
+            fetch(`grids/${svgFile}_${eye}.svg`) // Use svgFile here
                 .then(response => response.text())
                 .then(svgContent => {
                     if (!container) return;
-                    const sanitizedSVG = DOMPurify.sanitize(svgContent, { 
-                        USE_PROFILES: { svg: true, svgFilters: true } 
+                    const sanitizedSVG = DOMPurify.sanitize(svgContent, {
+                        USE_PROFILES: { svg: true, svgFilters: true }
                     });
                     container.innerHTML = sanitizedSVG;
-                    svgSettings[eye].svgContent = sanitizedSVG;
+                    svgSettings[eye].svgContent = sanitizedSVG; // Cache the fetched SVG
+                    svgSettings[eye].cachedMap = svgFile; // Store the map name with cached content
                     setupSvgElement(container, eye);
                     // Apply current color settings after loading
                     changeMapColor(svgSettings[eye].mapColor, eye);
@@ -1107,7 +1171,7 @@ function updateHistogram() {
                 .catch(error => {
                     console.error('Error loading SVG:', error);
                     if (container) container.innerHTML = '';
-                    alert(`Failed to load SVG: ${currentMap}_${eye}.svg`);
+                    alert(`Failed to load SVG: ${svgFile}_${eye}.svg`);
                 });
         }
     }
@@ -1310,8 +1374,10 @@ document.getElementById('autoLevels')?.addEventListener('click', () => {
             histogramCanvas.height = histogramCanvas.offsetHeight || 150;
         }
 
-        loadSVG(currentMap, 'L');
+        // Load the default SVG for the Right eye initially
         loadSVG(currentMap, 'R');
+        // Removed initial loading of Left eye SVG to improve startup performance
+
         setupAdjustmentSliders();
 
         class MobileUIManager {

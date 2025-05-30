@@ -148,6 +148,17 @@
         </div>
     </div>
 
+    <!-- Notes Modal -->
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeNotesModal">&times;</span>
+            <h2>Notes for Current Image</h2>
+            <textarea id="notesInput" rows="10" cols="50" placeholder="Enter your notes here..."></textarea>
+            <div id="savedNotesArea"></div>
+            <button class="btn" id="saveNoteBtn">Save Note</button>
+        </div>
+    </div>
+
     <!-- Web Worker Script -->
     <script id="workerScript" type="javascript/worker">
         self.addEventListener('message', function(e) {
