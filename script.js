@@ -1620,7 +1620,38 @@ document.getElementById('autoLevels')?.addEventListener('click', () => {
     initialize();
 
     // Event Listeners for Image Upload
-    // (No code needed here, all upload logic is now handled by the modalImageUpload event listener below)
+    imageUpload.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (!files.length) return;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    if (isDualViewActive) {
+                        imageSettings['L'].image = img;
+                        imageSettings['R'].image = img;
+                        createCanvasForEye('L');
+                        createCanvasForEye('R');
+                        loadImageForSpecificEye('L');
+                        loadImageForSpecificEye('R');
+                    } else {
+                        imageSettings[currentEye].image = img;
+                        createCanvasForEye(currentEye);
+                        loadImageForSpecificEye(currentEye);
+                    }
+                    resetAdjustments();
+                    addToGallery(event.target.result, file.name);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });   
+
 
     // Image transformation controls
     const rotationStep = 1; // Define rotation step in degrees
@@ -1900,124 +1931,6 @@ function moveImage(direction) {
         };
         img.src = imageDataUrl;
     }
-
-    // Upload Modal Logic
-    const showUploadModalBtn = document.getElementById('showUploadModal');
-    const uploadModal = document.getElementById('uploadModal');
-    const closeUploadModal = document.getElementById('closeUploadModal');
-    const modalImageUpload = document.getElementById('modalImageUpload');
-
-    if (showUploadModalBtn && uploadModal) {
-        showUploadModalBtn.addEventListener('click', function() {
-            imagePreviewArea.innerHTML = '';
-            selectedFiles = [];
-            confirmUploadBtn.disabled = true;
-            if (modalImageUpload) modalImageUpload.value = '';
-            uploadModal.style.display = 'block';
-        });
-    }
-    if (closeUploadModal && uploadModal) {
-        closeUploadModal.addEventListener('click', function() {
-            uploadModal.style.display = 'none';
-        });
-    }
-    // Optional: close modal when clicking outside content
-    window.addEventListener('click', function(event) {
-        if (event.target === uploadModal) {
-            uploadModal.style.display = 'none';
-        }
-    });
-
-    // --- Custom Upload Modal Logic ---
-    const customUploadBox = document.getElementById('customUploadBox');
-    const imagePreviewArea = document.getElementById('imagePreviewArea');
-    const confirmUploadBtn = document.getElementById('confirmUploadBtn');
-    let selectedFiles = [];
-
-    // Clear previews and file input on modal open
-    if (showUploadModalBtn && uploadModal) {
-        showUploadModalBtn.addEventListener('click', function() {
-            imagePreviewArea.innerHTML = '';
-            selectedFiles = [];
-            confirmUploadBtn.disabled = true;
-            if (modalImageUpload) modalImageUpload.value = '';
-            uploadModal.style.display = 'block';
-        });
-    }
-
-    // 1. Clicking the upload box triggers the file input
-    if (customUploadBox && modalImageUpload) {
-        customUploadBox.addEventListener('click', function() {
-            modalImageUpload.click();
-        });
-    }
-
-    // 2. Show all selected images as previews (replace previous selection)
-    if (modalImageUpload) {
-        modalImageUpload.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
-            selectedFiles = files;
-            imagePreviewArea.innerHTML = '';
-            if (files.length > 0) {
-                confirmUploadBtn.disabled = false;
-                files.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        const img = document.createElement('img');
-                        img.src = event.target.result;
-                        imagePreviewArea.appendChild(img);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            } else {
-                confirmUploadBtn.disabled = true;
-            }
-        });
-    }
-
-    // 3. On Upload button click, add all images to gallery, set first as main
-    if (confirmUploadBtn) {
-        confirmUploadBtn.addEventListener('click', function() {
-            if (!selectedFiles.length) return;
-            let firstImageSet = false;
-            selectedFiles.forEach((file, idx) => {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = new Image();
-                    img.onload = function() {
-                        // Only set the first image as the main image on the map
-                        if (!firstImageSet) {
-                            if (isDualViewActive) {
-                                imageSettings['L'].image = img;
-                                imageSettings['R'].image = img;
-                                createCanvasForEye('L');
-                                createCanvasForEye('R');
-                                loadImageForSpecificEye('L');
-                                loadImageForSpecificEye('R');
-                            } else {
-                                imageSettings[currentEye].image = img;
-                                createCanvasForEye(currentEye);
-                                loadImageForSpecificEye(currentEye);
-                            }
-                            resetAdjustments();
-                            firstImageSet = true;
-                        }
-                        // Add every image to the gallery
-                        addToGallery(event.target.result, file.name);
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-            // Clean up and close modal
-            selectedFiles = [];
-            imagePreviewArea.innerHTML = '';
-            confirmUploadBtn.disabled = true;
-            if (uploadModal) uploadModal.style.display = 'none';
-            if (modalImageUpload) modalImageUpload.value = '';
-        });
-    }
-    // --- End Custom Upload Modal Logic ---
 });
 
 function autoLevels() {

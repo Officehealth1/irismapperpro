@@ -41,8 +41,8 @@
 
 <!-- Top-Left Controls -->
 <div class="controls top-left" id="menuContainer">
-    <!-- <input type="file" id="imageUpload" accept="image/*" multiple style="display:none;"> -->
-    <button class="btn" id="showUploadModal">Upload Image(s)</button>
+    <input type="file" id="imageUpload" accept="image/*" multiple style="display:none;">
+    <button class="btn" onclick="document.getElementById('imageUpload').click()">Upload Image(s)</button>
     <button class="btn" id="selectMap">Select Map</button>
     <button class="btn" id="customMap">Custom Map</button>
     
@@ -145,21 +145,6 @@
             <span class="close">&times;</span>
             <h2>Select a Map</h2>
             <div id="mapOptions" class="map-options"></div>
-        </div>
-    </div>
-
-    <!-- Image Upload Modal -->
-    <div id="uploadModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close" id="closeUploadModal">&times;</span>
-            <h2>Upload Image(s)</h2>
-            <p>Select one or more images to upload.</p>
-            <div id="customUploadBox" class="custom-upload-box">
-                <span class="plus-icon">+</span>
-                <input type="file" id="modalImageUpload" accept="image/*" multiple style="display:none;">
-            </div>
-            <div id="imagePreviewArea" class="image-preview-area"></div>
-            <button class="btn" id="confirmUploadBtn" disabled>Upload</button>
         </div>
     </div>
 
