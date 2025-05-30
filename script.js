@@ -19,9 +19,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const controls = document.querySelectorAll('.controls');
     const galleryAccordion = document.getElementById('galleryAccordion');
     const addImageBtn = document.getElementById('addImageBtn');
-    const notesButton = document.getElementById('notes');
-    const notesModal = document.getElementById('notesModal');
-    const closeNotesModal = document.getElementById('closeNotesModal');
+    const availableMaps = [
+        'Angerer_Map_DE_V1',
+        'Bourdiol_Map_FR_V1',
+        'IrisLAB_Map_EN_V2',
+        'IrisLAB_Map_FR_V2',
+        'Jaussas_Map_FR_V1',
+        'Jensen_Map_EN_V1',
+        'Jensen_Map_FR_V1',
+        'Roux_Map_FR_V1'
+    ];
 
     const adjustmentSliders = {
         exposure: document.getElementById('exposureSlider'),
@@ -185,8 +192,7 @@ function findPercentilePoint(cdf, percentile) {
             canvas: null,
             context: null,
             image: null,
-            isAutoFitted: false,
-            notes: '' // Add a notes property
+            isAutoFitted: false
         };
     }
     
@@ -1064,70 +1070,51 @@ function updateHistogram() {
         }
     });
 
-    // Notes functionality
+    // Notes Modal Logic
+    const notesBtn = document.getElementById('notes');
+    const notesModal = document.getElementById('notesModal');
+    const closeNotesModal = document.getElementById('closeNotesModal');
     const notesInput = document.getElementById('notesInput');
     const saveNoteBtn = document.getElementById('saveNoteBtn');
     const savedNotesArea = document.getElementById('savedNotesArea');
 
-    if (notesButton) {
-        notesButton.addEventListener('click', function() {
-            if (notesModal) {
-                // Load existing notes for the current eye when opening the modal
-                if (notesInput) {
-                    notesInput.value = imageSettings[currentEye].notes;
-                }
-                // Clear any previously displayed saved notes
-                if (savedNotesArea) {
-                    savedNotesArea.innerHTML = ''; // We are only saving one note for now
-                    if (imageSettings[currentEye].notes) {
-                        const p = document.createElement('p');
-                        p.textContent = 'Saved Note: ' + imageSettings[currentEye].notes;
-                        savedNotesArea.appendChild(p);
-                    }
-                }
-                notesModal.style.display = 'block';
-            }
-        });
-    }
-
-    if (closeNotesModal) {
-        closeNotesModal.addEventListener('click', function() {
-            if (notesModal) {
-                notesModal.style.display = 'none';
-            }
-        });
-    }
-
-    // Event Listener for Save Note Button
-    if (saveNoteBtn && notesInput && savedNotesArea) {
-        saveNoteBtn.addEventListener('click', function() {
-            const noteText = notesInput.value.trim();
-            imageSettings[currentEye].notes = noteText; // Save note to the current eye's settings
-            console.log(`Note saved for ${currentEye} eye:`, noteText);
-
-            // Update the displayed saved notes area
-            savedNotesArea.innerHTML = ''; // Clear previous display
-            if (noteText) {
-                const p = document.createElement('p');
-                p.textContent = 'Saved Note: ' + noteText;
-                savedNotesArea.appendChild(p);
-            }
-            // Optionally clear the input area after saving
-            // notesInput.value = '';
-            alert('Note saved!'); // Provide user feedback
-        });
-    }
-
-    // Close modal when clicking outside of it
-    window.addEventListener('click', function(event) {
-        if (notesModal && event.target == notesModal) {
-            notesModal.style.display = 'none';
+    // Helper to get a unique key for the current image/eye
+    function getCurrentNotesKey() {
+        let key = 'notes_';
+        if (images[currentEye] && images[currentEye].name) {
+            key += images[currentEye].name + '_';
         }
-        // Keep existing logic for other modals if any
-        // if (mapModal && event.target == mapModal) {
-        //     mapModal.style.display = 'none';
-        // }
-    });
+        key += currentEye;
+        return key;
+    }
+
+    // Show notes modal and load note
+    if (notesBtn && notesModal) {
+        notesBtn.addEventListener('click', function() {
+            notesModal.style.display = 'block';
+            const key = getCurrentNotesKey();
+            const saved = localStorage.getItem(key) || '';
+            notesInput.value = saved;
+            savedNotesArea.textContent = saved ? 'Saved Note: ' + saved : '';
+        });
+    }
+
+    // Hide notes modal
+    if (closeNotesModal && notesModal) {
+        closeNotesModal.addEventListener('click', function() {
+            notesModal.style.display = 'none';
+        });
+    }
+
+    // Save note
+    if (saveNoteBtn) {
+        saveNoteBtn.addEventListener('click', function() {
+            const key = getCurrentNotesKey();
+            const note = notesInput.value.trim();
+            localStorage.setItem(key, note);
+            savedNotesArea.textContent = note ? 'Saved Note: ' + note : '';
+        });
+    }
 
     // SVG handling functions
     function loadSVG(svgFile, eye = currentEye) {
