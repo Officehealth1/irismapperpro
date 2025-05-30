@@ -804,6 +804,8 @@ function updateHistogram() {
                 valueDisplay.textContent = value;
             }
         });
+        // Update notes area for the new eye
+        updateNotesArea();
     }
 
     function toggleDualView() {
@@ -837,6 +839,8 @@ function updateHistogram() {
             if (imageSettings[currentEye].canvas) updateCanvasImage(currentEye);
         }
         updateHistogram();
+        // Update notes area for the current eye
+        updateNotesArea();
     }
 
     function updateSVGContainers(eye) {
@@ -1078,41 +1082,51 @@ function updateHistogram() {
     const saveNoteBtn = document.getElementById('saveNoteBtn');
     const savedNotesArea = document.getElementById('savedNotesArea');
 
-    // Helper to get a unique key for the current image/eye
-    function getCurrentNotesKey() {
-        let key = 'notes_';
-        if (images[currentEye] && images[currentEye].name) {
-            key += images[currentEye].name + '_';
-        }
-        key += currentEye;
-        return key;
+    // Utility: Generate a unique ID for an image (using base64 data)
+    function getImageId(imageDataUrl) {
+        // Use a hash or just a substring of the data URL for uniqueness
+        return 'img_' + btoa(imageDataUrl).substring(0, 16);
     }
 
-    // Show notes modal and load note
+    // --- Modified Notes Modal Logic ---
+    let currentImageId = null;
+
+    // Helper to get a unique key for the current image and eye
+    function getCurrentNotesKey() {
+        return currentImageId && currentEye ? 'notes_' + currentImageId + '_' + currentEye : null;
+    }
+
+    // Helper to update the notes area for the current image and eye
+    function updateNotesArea() {
+        const key = getCurrentNotesKey();
+        const saved = key ? localStorage.getItem(key) : '';
+        notesInput.value = saved || '';
+        savedNotesArea.textContent = saved ? 'Saved Note: ' + saved : '';
+    }
+
     if (notesBtn && notesModal) {
         notesBtn.addEventListener('click', function() {
             notesModal.style.display = 'block';
-            const key = getCurrentNotesKey();
-            const saved = localStorage.getItem(key) || '';
-            notesInput.value = saved;
-            savedNotesArea.textContent = saved ? 'Saved Note: ' + saved : '';
+            updateNotesArea();
         });
     }
 
-    // Hide notes modal
     if (closeNotesModal && notesModal) {
         closeNotesModal.addEventListener('click', function() {
             notesModal.style.display = 'none';
         });
     }
 
-    // Save note
     if (saveNoteBtn) {
         saveNoteBtn.addEventListener('click', function() {
             const key = getCurrentNotesKey();
             const note = notesInput.value.trim();
-            localStorage.setItem(key, note);
-            savedNotesArea.textContent = note ? 'Saved Note: ' + note : '';
+            if (key) {
+                localStorage.setItem(key, note);
+                savedNotesArea.textContent = note ? 'Saved Note: ' + note : '';
+                updateGalleryNoteIcon(currentImageId, !!note);
+                updateGalleryNoteData(currentImageId, note);
+            }
         });
     }
 
@@ -1623,11 +1637,11 @@ document.getElementById('autoLevels')?.addEventListener('click', () => {
     imageUpload.addEventListener('change', function(e) {
         const files = e.target.files;
         if (!files.length) return;
-
+        let firstImageId = null;
+        let firstImageDataUrl = null;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const reader = new FileReader();
-            
             reader.onload = function(event) {
                 const img = new Image();
                 img.onload = function() {
@@ -1644,7 +1658,15 @@ document.getElementById('autoLevels')?.addEventListener('click', () => {
                         loadImageForSpecificEye(currentEye);
                     }
                     resetAdjustments();
+                    const thisImageId = getImageId(event.target.result);
                     addToGallery(event.target.result, file.name);
+                    // Only set currentImageId and update notes for the first image
+                    if (firstImageId === null) {
+                        firstImageId = thisImageId;
+                        firstImageDataUrl = event.target.result;
+                        currentImageId = firstImageId;
+                        updateNotesArea();
+                    }
                 };
                 img.src = event.target.result;
             };
@@ -1867,11 +1889,16 @@ function moveImage(direction) {
 
     // Gallery Functions
     function addToGallery(imageDataUrl, name) {
+        const imageId = getImageId(imageDataUrl);
+        const noteKey = 'notes_' + imageId + '_' + currentEye;
+        const note = localStorage.getItem(noteKey) || '';
         const galleryItem = document.createElement('div');
         galleryItem.className = 'gallery-item';
+        galleryItem.dataset.imageId = imageId;
         galleryItem.innerHTML = `
             <div class="gallery-item-header">
                 <span class="image-name">${name}</span>
+                <span class="note-icon" style="display:${note ? 'inline' : 'none'};">📝</span>
                 <div class="gallery-item-controls">
                     <button class="btn rename-btn">Rename</button>
                     <button class="btn load-btn">Load</button>
@@ -1879,18 +1906,21 @@ function moveImage(direction) {
             </div>
             <div class="gallery-item-content">
                 <img src="${imageDataUrl}" alt="${name}" loading="lazy">
+                <button class="gallery-delete-btn" title="Delete image" tabindex="0" aria-label="Delete image">×</button>
             </div>
         `;
-
-        setupGalleryItemEvents(galleryItem, imageDataUrl);
+        setupGalleryItemEvents(galleryItem, imageDataUrl, note);
         galleryAccordion.appendChild(galleryItem);
     }
 
-    function setupGalleryItemEvents(galleryItem, imageDataUrl) {
+    function setupGalleryItemEvents(galleryItem, imageDataUrl, note) {
         const imageNameElement = galleryItem.querySelector('.image-name');
         const renameBtn = galleryItem.querySelector('.rename-btn');
         const loadBtn = galleryItem.querySelector('.load-btn');
-        
+        const noteIcon = galleryItem.querySelector('.note-icon');
+        const deleteBtn = galleryItem.querySelector('.gallery-delete-btn');
+        const imageId = galleryItem.dataset.imageId;
+
         renameBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             const currentName = imageNameElement.textContent;
@@ -1902,17 +1932,50 @@ function moveImage(direction) {
 
         loadBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            loadImageFromGallery(imageDataUrl);
+            loadImageFromGallery(imageDataUrl, imageId);
         });
 
+        // Delete button logic (click and keyboard)
+        function handleDelete(e) {
+            if (e.type === 'click' || (e.type === 'keydown' && (e.key === 'Enter' || e.key === ' '))) {
+                e.stopPropagation();
+                if (!confirm('Are you sure you want to delete this image and its notes?')) return;
+                // Remove notes for both eyes
+                localStorage.removeItem('notes_' + imageId + '_L');
+                localStorage.removeItem('notes_' + imageId + '_R');
+                // Remove from DOM
+                galleryItem.remove();
+                // If this was the currently displayed image, switch to next or clear
+                if (currentImageId === imageId) {
+                    const nextGalleryItem = document.querySelector('.gallery-item');
+                    if (nextGalleryItem) {
+                        const nextImageId = nextGalleryItem.dataset.imageId;
+                        const nextImg = nextGalleryItem.querySelector('img');
+                        if (nextImg) {
+                            loadImageFromGallery(nextImg.src, nextImageId);
+                        }
+                    } else {
+                        // No images left, clear display and notes
+                        currentImageId = null;
+                        notesInput.value = '';
+                        savedNotesArea.textContent = '';
+                    }
+                }
+            }
+        }
+        deleteBtn.addEventListener('click', handleDelete);
+        deleteBtn.addEventListener('keydown', handleDelete);
+
         // Toggle gallery item content
-        galleryItem.querySelector('.gallery-item-header').addEventListener('click', function() {
+        galleryItem.querySelector('.gallery-item-header').addEventListener('click', function(e) {
+            // Prevent toggling if delete button was clicked
+            if (e.target === deleteBtn) return;
             const content = galleryItem.querySelector('.gallery-item-content');
             content.classList.toggle('active');
         });
     }
 
-    function loadImageFromGallery(imageDataUrl) {
+    function loadImageFromGallery(imageDataUrl, imageId) {
         const img = new Image();
         img.onload = function() {
             if (isDualViewActive) {
@@ -1928,8 +1991,24 @@ function moveImage(direction) {
                 loadImageForSpecificEye(currentEye);
             }
             resetAdjustments();
+            currentImageId = imageId;
+            updateNotesArea();
         };
         img.src = imageDataUrl;
+    }
+
+    // Update note icon in gallery
+    function updateGalleryNoteIcon(imageId, hasNote) {
+        const galleryItem = document.querySelector(`.gallery-item[data-image-id='${imageId}'] .note-icon`);
+        if (galleryItem) {
+            galleryItem.style.display = hasNote ? 'inline' : 'none';
+        }
+    }
+
+    // Update note data in gallery (if you have a gallery array, update it here)
+    function updateGalleryNoteData(imageId, note) {
+        // If you have a gallery array/object, update the note property here
+        // For now, this is a placeholder for future extensibility
     }
 });
 

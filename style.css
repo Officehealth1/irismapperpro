@@ -307,6 +307,7 @@ body, html {
 }
 
 .gallery-item-header {
+    position: relative;
     padding: 8px;
     background-color: #f5f5f5;
     cursor: pointer;
@@ -318,18 +319,55 @@ body, html {
 .gallery-item-content {
     padding: 8px;
     display: none;
+    position: relative;
 }
 
 .gallery-item-content.active {
     display: block;
 }
 
+.gallery-item-content .gallery-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s, opacity 0.2s;
+    opacity: 0;
+    pointer-events: none;
+}
+.gallery-item-content:hover .gallery-delete-btn,
+.gallery-item-content.active .gallery-delete-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+.gallery-delete-btn:hover, .gallery-delete-btn:focus {
+    background: #c0392b;
+    box-shadow: 0 4px 12px rgba(231,76,60,0.15);
+    outline: none;
+    transform: scale(1.08);
+}
+.gallery-delete-btn:active {
+    background: #a93226;
+    transform: scale(0.95);
+}
 .gallery-item img {
     width: 100%;
     height: auto;
     border-radius: 4px;
 }
-
 
 .adjustment-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -807,6 +845,14 @@ body, html {
     height: 100%;
     margin: 0;
     border-radius: 0;
+  }
+
+  .gallery-item-content .gallery-delete-btn {
+    top: 4px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    font-size: 22px;
   }
 }
 
